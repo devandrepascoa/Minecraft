@@ -2,16 +2,22 @@
 #include <glad/glad.h>
 #include "../Utils.h"
 
-IndexBuffer::IndexBuffer(const void* data, unsigned int size) :numIndices(size / sizeof(unsigned int))
+IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int size) :numIndices(size / sizeof(unsigned int))
 {
 	GLCall(glGenBuffers(1, &rendererId));
-	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendererId));
-	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
+	this->updateData(data, size);
 }
 
 IndexBuffer::~IndexBuffer()
 {
 	GLCall(glDeleteBuffers(1, &rendererId));
+}
+
+void IndexBuffer::updateData(const unsigned int* data, unsigned int size)
+{
+	numIndices = size / sizeof(unsigned int);
+	this->bind();
+	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
 }
 
 

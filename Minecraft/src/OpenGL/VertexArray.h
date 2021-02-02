@@ -10,7 +10,7 @@ struct VertexBufferElement {
 	bool normalized;
 };
 
-unsigned int getSizeOfGLEnumType(GLenum type);
+extern unsigned int getSizeOfGLEnumType(GLenum type);
 
 class VertexBufferLayout {
 private:

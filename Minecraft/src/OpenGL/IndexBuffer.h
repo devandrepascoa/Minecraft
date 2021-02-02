@@ -6,8 +6,9 @@ private:
 	unsigned int numIndices;
 public:
 	IndexBuffer() = delete;
-	IndexBuffer(const void* data, unsigned int size);
+	IndexBuffer(const unsigned int* data, unsigned int size);
 	~IndexBuffer();
+	void updateData(const unsigned int* data, unsigned int size);
 	void bind() const;
 	void unBind() const;
 	unsigned int getNumIndices()const;

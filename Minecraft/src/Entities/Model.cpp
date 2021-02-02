@@ -1,6 +1,6 @@
 #include "Model.h"
 
-Model::Model(const void* vertices, const void* indices, unsigned int sizeVertices, unsigned int sizeIndices) :ibo(indices, sizeIndices), vbo(vertices, sizeVertices) {
+Model::Model(const void* vertices, const unsigned int* indices, unsigned int sizeVertices, unsigned int sizeIndices) :ibo(indices, sizeIndices), vbo(vertices, sizeVertices) {
 
 	VertexBufferLayout layout;
 	layout.push<float>(3);
@@ -19,6 +19,11 @@ Model::Model(const std::vector<float>& vertices,const std::vector<unsigned int>&
 VertexArray& Model::getVao()
 {
 	return vao;
+}
+
+VertexBuffer& Model::getVbo()
+{
+	return vbo;
 }
 
 IndexBuffer& Model::getIbo()

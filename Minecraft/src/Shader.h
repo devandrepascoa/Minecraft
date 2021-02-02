@@ -21,6 +21,7 @@ public:
 	void setUniform3F(const std::string& name, const glm::vec3 vec) const;
 	void setUniform2F(const std::string& name, const glm::vec2 vec) const;
 	void setUniform1F(const std::string& name, float x) const;
+	void setUniform1i(const std::string& name, int x) const;
 
 
 	void bind() const;
