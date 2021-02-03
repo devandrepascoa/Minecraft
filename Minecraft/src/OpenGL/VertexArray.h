@@ -2,7 +2,7 @@
 #include "VertexBuffer.h"
 #include <vector>
 #include <glad/glad.h>
-#include "../Utils.h"
+#include "../Utilities/Utils.h"
 
 struct VertexBufferElement {
 	GLenum type;

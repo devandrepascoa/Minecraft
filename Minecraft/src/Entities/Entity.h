@@ -3,7 +3,7 @@
 
 class Entity
 {
-private:
+protected:
 	glm::vec3 position, rotation, velocity;
 public:
 	Entity();
@@ -11,6 +11,9 @@ public:
 	Entity(glm::vec3 position, glm::vec3 rotation);
 	Entity(glm::vec3 position, glm::vec3 rotation, glm::vec3 velocity);
 
+	virtual void setPosition(const glm::vec3& position);
+	virtual void setRotation(const glm::vec3& rotation);
+	virtual void setVelocity(const glm::vec3& velocity);
 	glm::vec3 getPosition();
 	glm::vec3 getRotation();
 	glm::vec3 getVelocity();

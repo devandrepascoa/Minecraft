@@ -1,8 +1,8 @@
 #include "Texture.h"
-#include "Utils.h"
+#include "../Utilities/Utils.h"
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
-#include "../vendor/stb/stb_image.h"
+#include "../../vendor/stb/stb_image.h"
 
 Texture::Texture(std::string path) {
 	type = GL_TEXTURE_2D;
@@ -16,10 +16,10 @@ Texture::Texture(std::string path) {
 	// load and generate the texture
 	stbi_set_flip_vertically_on_load(true);
 	int width, height, n_channels;
-	unsigned char* data = stbi_load(path.c_str(), &width, &height, &n_channels, 4);
+	unsigned char* data = stbi_load(path.c_str(), &width, &height, &n_channels, STBI_rgb_alpha);
 	if (data)
 	{
-		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
 		GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 	}
 	else

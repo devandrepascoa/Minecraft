@@ -5,12 +5,14 @@ vbo(&vertices.front(), sizeof(float)* vertices.size()), indices(indices), vertic
 	VertexBufferLayout layout;
 	layout.push<float>(3);
 	layout.push<float>(2);
+	layout.push<float>(1);
 	vao.bindBuffer(vbo, layout);
 }
 Mesh::Mesh() : vbo({}, 0), ibo({}, 0) {
 	VertexBufferLayout layout;
 	layout.push<float>(3);
 	layout.push<float>(2);
+	layout.push<float>(1);
 	vao.bindBuffer(vbo, layout);
 }
 

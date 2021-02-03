@@ -1,6 +1,6 @@
 #include "IndexBuffer.h"
 #include <glad/glad.h>
-#include "../Utils.h"
+#include "../Utilities/Utils.h"
 
 IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int size) :numIndices(size / sizeof(unsigned int))
 {

@@ -89,6 +89,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -106,6 +107,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -123,6 +125,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,6 +143,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -151,19 +155,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Chunk\ChunkManager.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Entities\Player.cpp" />
+    <ClCompile Include="src\Renderers\ChunkRenderer.cpp" />
+    <ClCompile Include="src\Chunk\Chunk.cpp" />
     <ClCompile Include="src\Entities\Mesh.cpp" />
     <ClCompile Include="src\Entities\Entity.cpp" />
-    <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\Entities\Cube.cpp" />
+    <ClCompile Include="src\Entities\Block.cpp" />
     <ClCompile Include="src\Entities\Model.cpp" />
     <ClCompile Include="src\OpenGL\IndexBuffer.cpp" />
-    <ClCompile Include="src\Renderers\CubeRenderer.cpp" />
     <ClCompile Include="src\Renderers\MasterRenderer.cpp" />
     <ClCompile Include="src\Minecraft.cpp" />
-    <ClCompile Include="src\Shader.cpp" />
-    <ClCompile Include="src\Utils.cpp" />
+    <ClCompile Include="src\OpenGL\Shader.cpp" />
+    <ClCompile Include="src\Utilities\Utils.cpp" />
     <ClCompile Include="src\OpenGL\VertexArray.cpp" />
-    <ClCompile Include="src\Texture.cpp" />
+    <ClCompile Include="src\OpenGL\Texture.cpp" />
     <ClCompile Include="vendor\glad\glad.c" />
     <ClCompile Include="src\OpenGL\VertexBuffer.cpp" />
   </ItemGroup>
@@ -172,23 +180,29 @@
     <None Include="res\shaders\basic3d.shader" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Chunk\ChunkManager.h" />
+    <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\Application.h" />
+    <ClInclude Include="src\Entities\Player.h" />
+    <ClInclude Include="src\Renderers\ChunkRenderer.h" />
+    <ClInclude Include="src\Chunk\Chunk.h" />
     <ClInclude Include="src\Entities\Mesh.h" />
     <ClInclude Include="src\Entities\Entity.h" />
-    <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\Entities\Cube.h" />
+    <ClInclude Include="src\Entities\Block.h" />
     <ClInclude Include="src\Entities\Model.h" />
     <ClInclude Include="src\OpenGL\IndexBuffer.h" />
-    <ClInclude Include="src\Renderers\CubeRenderer.h" />
     <ClInclude Include="src\Renderers\MasterRenderer.h" />
-    <ClInclude Include="src\Shader.h" />
-    <ClInclude Include="src\Utils.h" />
+    <ClInclude Include="src\OpenGL\Shader.h" />
+    <ClInclude Include="src\Utilities\Utils.h" />
     <ClInclude Include="src\OpenGL\VertexArray.h" />
     <ClInclude Include="src\OpenGL\VertexBuffer.h" />
-    <ClInclude Include="src\Texture.h" />
+    <ClInclude Include="src\OpenGL\Texture.h" />
     <ClInclude Include="vendor\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\dirt.jpg" />
+    <Image Include="res\textures\textureAtlas.jpg" />
+    <Image Include="res\textures\textureAtlas.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

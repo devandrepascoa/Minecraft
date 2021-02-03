@@ -1,6 +1,6 @@
 #include "Shader.h"
 #include <glad/glad.h>
-#include "Utils.h"
+#include "../Utilities/Utils.h"
 #include <iostream>
 #include <sstream>
 #include <array>
