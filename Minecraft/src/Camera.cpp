@@ -7,10 +7,8 @@ void Camera::updateViewMatrix()
 {
 	glm::mat4 viewMatrix(1.0f);
 	this->viewMatrix =
-		glm::rotate(viewMatrix, glm::radians(rotation.x), { 1, 0,0 }) *
-		glm::rotate(viewMatrix, glm::radians(rotation.y), { 0, 1,0 }) *
-		glm::rotate(viewMatrix, glm::radians(rotation.z), { 0, 0,1 }) *
-		glm::translate(viewMatrix, position);
+		getViewMatrixRotation() *
+		glm::translate(viewMatrix, -position);
 }
 
 void Camera::updateProjectionMatrix(int windowWidth, int windowHeight)
@@ -33,6 +31,14 @@ void Camera::setRotation(const glm::vec3& rotation)
 glm::mat4 Camera::getProjectionMatrix() const
 {
 	return projectionMatrix;
+}
+
+glm::mat4 Camera::getViewMatrixRotation() const
+{
+	glm::mat4 viewMatrixRotation(1.0f);
+	return glm::rotate(viewMatrixRotation, glm::radians(rotation.x), { 1, 0,0 }) *
+		glm::rotate(viewMatrixRotation, glm::radians(rotation.y), { 0, 1,0 }) *
+		glm::rotate(viewMatrixRotation, glm::radians(rotation.z), { 0, 0,1 });
 }
 
 glm::mat4 Camera::getViewMatrix() const

@@ -172,11 +172,15 @@ const static std::array<float, 8>& getFaceTexCoords(FaceType faceType, BlockType
 
 
 
-class Block {
+class Block : public Entity {
 private:
 	BlockType type;
+	bool focus;
 public:
 	Block();
-	Block(BlockType type);
+	Block(glm::vec3 position,BlockType type);
 	BlockType getType() const;
+	bool getFocus() const;
+	void setFocus(bool focus);
+	void setType(BlockType type);
 };

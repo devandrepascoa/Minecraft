@@ -3,15 +3,17 @@
 #include <iostream>
 #include <glm/gtc/noise.hpp>
 #include <glm/vec4.hpp>
+#include "ChunkManager.h"
+
 Chunk::Chunk() {}
 
 Chunk::Chunk(glm::vec3 position) :Entity(position)
 {
 }
 
-void addFaceToMesh(Mesh& mesh, glm::vec3 position, FaceType faceType, BlockType type) {
+void addFaceToMesh(Mesh& mesh, glm::vec3 position, FaceType faceType, Block* block) {
 	const std::array<float, 12>& faceVertices = getFaceVertices(faceType);
-	const std::array<float, 8>& texCoords = getFaceTexCoords(faceType, type);
+	const std::array<float, 8>& texCoords = getFaceTexCoords(faceType, block->getType());
 
 	float light = 0.0f;
 	switch (faceType) {
@@ -27,9 +29,12 @@ void addFaceToMesh(Mesh& mesh, glm::vec3 position, FaceType faceType, BlockType 
 		break;
 	case FaceType::FRONT:
 	case FaceType::BACK:
-		light = 0.6f;	
+		light = 0.6f;
 		break;
 	}
+	if (block->getFocus()) 	
+		light *= 2.0f;
+
 	std::vector<float>& vertices = mesh.getVertices();
 	std::vector<unsigned int>& indices = mesh.getIndices();
 	int numVertices = vertices.size() / 6;
@@ -68,12 +73,12 @@ void Chunk::generateChunk()
 
 			for (size_t j = 0; j < 256; j++) {
 				if (j > val)
-					blocks[i][j][k] = Block(BlockType::AIR);
+					blocks[i][j][k] = Block(toWorldPosition(glm::vec3(i, j, k)), BlockType::AIR);
 				else {
 					if (j > 80)
-						blocks[i][j][k] = Block(BlockType::DIRT);
+						blocks[i][j][k] = Block(toWorldPosition(glm::vec3(i, j, k)), BlockType::DIRT);
 					else
-						blocks[i][j][k] = Block(BlockType::STONE);
+						blocks[i][j][k] = Block(toWorldPosition(glm::vec3(i, j, k)), BlockType::STONE);
 				}
 			}
 		}
@@ -81,38 +86,84 @@ void Chunk::generateChunk()
 
 }
 
-void Chunk::generateMesh()
+void Chunk::generateMesh(const ChunkManager& manager)
 {
+
 	for (int i = 0; i < 16; i++) {
 		for (int j = 0; j < 256; j++) {
 			for (int k = 0; k < 16; k++) {
-				Block b = blocks[i][j][k];
-				if (b.getType() == BlockType::AIR) continue;
+				Block* b = &blocks[i][j][k];
+				if (b->getType() == BlockType::AIR) continue;
 
-				if (j == 255 || j < 255 && blocks[i][j + 1][k].getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::TOP, b.getType());
-				if (j == 0 || j > 0 && blocks[i][j - 1][k].getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::BOTTOM, b.getType());
-				if (i == 15 || i < 15 && blocks[i + 1][j][k].getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::RIGHT, b.getType());
-				if (i == 0 || i > 0 && blocks[i - 1][j][k].getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::LEFT, b.getType());
-				if (k == 15 || k < 15 && blocks[i][j][k + 1].getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::BACK, b.getType());
-				if (k == 0 || k > 0 && blocks[i][j][k - 1].getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::FRONT, b.getType());
+				Block* block = getBlock(manager, glm::vec3(i, j + 1, k));
+				if (block != nullptr && block->getType() == BlockType::AIR)
+					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::TOP, b);
+
+				block = getBlock(manager, glm::vec3(i, j - 1, k));
+				if (block != nullptr && block->getType() == BlockType::AIR)
+					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::BOTTOM, b);
+
+				block = getBlock(manager, glm::vec3(i + 1, j, k));
+				if (block != nullptr && block->getType() == BlockType::AIR)
+					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::RIGHT, b);
+
+				block = getBlock(manager, glm::vec3(i - 1, j, k));
+				if (block != nullptr && block->getType() == BlockType::AIR)
+					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::LEFT, b);
+
+				block = getBlock(manager, glm::vec3(i, j, k + 1));
+				if (block != nullptr && block->getType() == BlockType::AIR)
+					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::BACK, b);
+
+				block = getBlock(manager, glm::vec3(i, j, k - 1));
+				if (block != nullptr && block->getType() == BlockType::AIR)
+					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::FRONT, b);
 			}
 		}
 	}
 
-	mesh.updateBuffers();
-
+	getMesh().updateBuffers();
+	getMesh().clearIndices();
+	getMesh().clearVertices();
 }
 
-Block(&Chunk::getBlocks())[16][256][16]
+Block(*Chunk::getBlocks())[16][256][16]
 {
-	return blocks;
+	return &blocks;
 }
+
+Block* Chunk::getBlock(const glm::vec3& position)
+{
+	if (isWithinBounds(position))
+		return &blocks[(int)position.x][(int)position.y][(int)position.z];
+	return nullptr;
+}
+
+Block* Chunk::getBlock(const ChunkManager& manager, const glm::vec3& position)
+{
+	if (isWithinBounds(position))
+		return &blocks[(int)position.x][(int)position.y][(int)position.z];
+	if (position.y < 0 || position.y > 255) return nullptr;
+	return manager.getBlock(toWorldPosition(position));
+}
+
+bool Chunk::isWithinBounds(const glm::vec3& position)
+{
+	return position.x >= 0 && position.x < 16 &&
+		position.y >= 0 && position.y < 256 &&
+		position.z >= 0 && position.z < 16;
+}
+
+glm::vec3 Chunk::toWorldPosition(const glm::vec3& position)
+{
+	return (glm::vec3(this->position.x * 16, this->position.y * 256, this->position.z * 16)) + position;
+}
+
+glm::vec3 Chunk::toChunkPosition(const glm::vec3& position)
+{
+	return glm::vec3();
+}
+
 
 Mesh& Chunk::getMesh()
 {

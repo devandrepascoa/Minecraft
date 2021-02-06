@@ -5,19 +5,19 @@
 #include "Renderers/MasterRenderer.h"
 #include "Chunk/Chunk.h"
 #include "Entities/Player.h"
+#include "Chunk/ChunkManager.h"
 
 class Application
 {
 private:
 	int windowWidth, windowHeight;
 	bool running;
-	float lastFrameTime;
+	float lastFrameTime, lastFrame;
 	GLFWwindow* window;
 	MasterRenderer* renderer;
 	Player player;
-
-	std::vector<Chunk*> chunks;
-
+	ChunkManager chunkManager;
+	Block* focusBlock;
 	bool initializeOpenglWindow(const char* title);
 	void processKeyboardInput();
 public:
@@ -27,7 +27,8 @@ public:
 	void run();
 	static Application& getInstance();
 	static void onWindowResize(GLFWwindow* window, int width, int height);
-	static void onMouseMoved(GLFWwindow* window,double xPos, double yPos);
+	static void onMouseMoved(GLFWwindow* window, double xPos, double yPos);
+	static void onMouseButton(GLFWwindow* window, int button, int action, int mods);
 	static void onWindowClose(GLFWwindow* window);
 };
 

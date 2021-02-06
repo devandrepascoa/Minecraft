@@ -1,8 +1,22 @@
 #include "Application.h"
-#include "Application.h"
 #include "Utilities/Utils.h"
 #include <iostream>
 #include <windows.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include "RayCaster.h"
+#include <glm/gtx/string_cast.hpp>
+Application::Application() :running(true), windowWidth(1920), windowHeight(1080), lastFrameTime(0.0f), player(glm::vec3(10, 200.0f, 10)), lastFrame(0), focusBlock(nullptr)
+{
+	if (!initializeOpenglWindow("Minecraft")) {
+		running = false;
+		return;
+	}
+	std::cout << "Opengl Version: " << glGetString(GL_VERSION) << std::endl;
+	renderer = new MasterRenderer();
+
+	chunkManager.loadChunks(renderer);
+
+}
 
 void Application::onWindowResize(GLFWwindow* window, int width, int height)
 {
@@ -30,6 +44,24 @@ void Application::onMouseMoved(GLFWwindow* window, double xPos, double yPos)
 
 }
 
+void Application::onMouseButton(GLFWwindow* window, int button, int action, int mods)
+{
+	Application& app = getInstance();
+	if (action == GLFW_PRESS) {
+		switch (button) {
+		case GLFW_MOUSE_BUTTON_LEFT:
+			app.player.setPlayerAction(PlayerAction::PLACE);
+			break;
+
+		case GLFW_MOUSE_BUTTON_RIGHT:
+			app.player.setPlayerAction(PlayerAction::DESTROY);
+			break;
+		default:
+			app.player.setPlayerAction(PlayerAction::NONE);
+			break;
+		}
+	}
+}
 void Application::onWindowClose(GLFWwindow* window)
 {
 	Application& app = getInstance();
@@ -64,7 +96,7 @@ bool Application::initializeOpenglWindow(const char* title) {
 	glfwSetFramebufferSizeCallback(window, Application::onWindowResize);
 
 	glfwSetCursorPosCallback(window, Application::onMouseMoved);
-
+	glfwSetMouseButtonCallback(window, Application::onMouseButton);
 	glfwSetWindowCloseCallback(window, Application::onWindowClose);
 
 	glfwMakeContextCurrent(window);
@@ -78,43 +110,25 @@ bool Application::initializeOpenglWindow(const char* title) {
 	return true;
 }
 
-Application::Application() :running(true), windowWidth(1920), windowHeight(1080), lastFrameTime(0.0f)
-{
-	if (!initializeOpenglWindow("Minecraft")) {
-		running = false;
-		return;
-	}
-	std::cout << "Opengl Version: " << glGetString(GL_VERSION) << std::endl;
-	renderer = new MasterRenderer();
-
-	for (int i = -12; i < 12; i++) {
-		for (int k = -12; k < 12; k++) {
-			Chunk* newChunk = new Chunk(glm::vec3(i, 0, k));
-			chunks.push_back(newChunk);
-			newChunk->generateChunk();
-			newChunk->generateMesh();
-			renderer->addChunk(*newChunk);
-			std::cout << "Generating Chunk (" << i << "," << k << ")" << std::endl;
-		}
-	}
-
-}
 
 Application::~Application()
 {
-	for (auto chunk : chunks)
-		delete chunk;
 	delete renderer;
 	glfwTerminate();
 }
 
 void Application::run()
 {
+	RayCaster caster(player.getCamera());
+	lastFrameTime = glfwGetTime();
 	while (running) {
 		float currentFrame = glfwGetTime();
 		float deltaTime = currentFrame - lastFrameTime;
 		lastFrameTime = currentFrame;
+		//while (glfwGetTime() < lastFrame + 1.0 / 60) {}
+		//lastFrame += 1.0 / 60;
 
+		std::cout << "Player pos:" << glm::to_string(player.getPosition()) << std::endl;
 
 		renderer->clear();
 		renderer->render(player.getCamera());
@@ -123,8 +137,55 @@ void Application::run()
 		glfwPollEvents();
 
 		processKeyboardInput();
-		player.update(deltaTime);
-		std::cout << windowWidth << std::endl;
+		player.update(chunkManager, deltaTime);
+
+		Block* selectedBlock = caster.getSelectedBlock(chunkManager);
+
+		if (selectedBlock != nullptr) {
+			if (focusBlock != nullptr)
+				focusBlock->setFocus(false);
+			if (focusBlock != selectedBlock) {
+				if (focusBlock != nullptr)
+					chunkManager.addChunkToUpdateFromBlock(focusBlock->getPosition());
+				chunkManager.addChunkToUpdateFromBlock(selectedBlock->getPosition());
+				focusBlock = selectedBlock;
+				focusBlock->setFocus(true);
+			}
+			if (player.getPlayerAction() == PlayerAction::DESTROY)
+				selectedBlock->setType(BlockType::AIR);
+			if (player.getPlayerAction() == PlayerAction::PLACE) {
+				glm::vec3 selectedBlockPosition = selectedBlock->getPosition();
+				selectedBlockPosition.y += 1;
+				Block* block = chunkManager.getBlock(selectedBlockPosition);
+				if (block != nullptr)
+					block->setType(BlockType::STONE);
+			}
+			if (player.getPlayerAction() != PlayerAction::NONE) {
+				chunkManager.addChunkToUpdateFromBlock(selectedBlock->getPosition());
+				player.setPlayerAction(PlayerAction::NONE);
+			}
+		}
+		else {
+			player.setPlayerAction(PlayerAction::NONE);
+			if (focusBlock != nullptr) {
+				focusBlock->setFocus(false);
+				chunkManager.addChunkToUpdateFromBlock(focusBlock->getPosition());
+				focusBlock = nullptr;
+			}
+		}
+
+		if (!chunkManager.getChunksToUpdate().empty()) {
+			auto chunkPosition = chunkManager.getChunksToUpdate().front();
+			chunkManager.getChunksToUpdate().pop_front();
+			Chunk* newChunk = chunkManager.getChunk(chunkPosition);
+			if (newChunk != nullptr) {
+				newChunk->generateMesh(chunkManager);
+				newChunk->getMesh().updateBuffers();
+				renderer->addChunk(*newChunk);
+				std::cout << "Update Mesh at Chunk (" << chunkPosition.x << "," << chunkPosition.y << ")" << std::endl;
+			}
+		}
+
 	}
 }
 
@@ -139,21 +200,40 @@ void Application::processKeyboardInput()
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		running = false;
-	float velocityFactor = 50.0f;
-	float playerVelX = 0, playerVelY = 0, playerVelZ = 0;
+	float accelFactor = 0.8f;
+	if (player.isFlying())
+		accelFactor = 5.0f;
+	glm::vec3 acceleration = player.getAcceleration();
 
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		playerVelZ = velocityFactor;
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		playerVelZ = -velocityFactor;
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		playerVelY = -velocityFactor;
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-		playerVelY = velocityFactor;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		acceleration.x += -glm::cos(glm::radians(player.getRotation().y + 90)) * accelFactor;
+		acceleration.z += -glm::sin(glm::radians(player.getRotation().y + 90)) * accelFactor;
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		acceleration.x += glm::cos(glm::radians(player.getRotation().y + 90)) * accelFactor;
+		acceleration.z += glm::sin(glm::radians(player.getRotation().y + 90)) * accelFactor;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && (player.isFlying() || player.isGrounded())) {
+		if (!player.isFlying())
+			acceleration.y += accelFactor * 10.0f;
+		else
+			acceleration.y += accelFactor;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && player.isFlying()) {
+		if (!player.isFlying())
+			acceleration.y -= accelFactor * 10.0f;
+		else
+			acceleration.y -= accelFactor;
+	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		playerVelX = velocityFactor;
+		acceleration += leftVector(player.getRotation()) * accelFactor;
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		playerVelX = -velocityFactor;
+		acceleration += rightVector(player.getRotation()) * accelFactor;
 
-	player.setVelocity(glm::vec3(playerVelX, playerVelY, playerVelZ));
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+		player.setFlying(!player.isFlying());
+
+	player.setAcceleration(acceleration);
 }

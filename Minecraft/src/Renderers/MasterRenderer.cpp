@@ -23,6 +23,8 @@ void MasterRenderer::clear()
 
 void MasterRenderer::render(const Camera& camera)
 {
+	GLCall(glEnable(GL_CULL_FACE));
+	GLCall(glCullFace(GL_BACK));
 	GLCall(glEnable(GL_DEPTH_TEST));
 	for (auto chunk : chunks) {
 		chunkRenderer.render(camera, chunk);

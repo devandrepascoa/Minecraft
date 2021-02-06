@@ -24,6 +24,7 @@ void Mesh::updateData(std::vector<float> vertices, std::vector<unsigned int> ind
 
 void Mesh::updateBuffers()
 {
+	if (indices.empty() || vertices.empty())return;
 	this->ibo.updateData(&indices.front(), sizeof(unsigned int) * indices.size());
 	this->vbo.updateData(&vertices.front(), sizeof(float) * vertices.size());
 }
