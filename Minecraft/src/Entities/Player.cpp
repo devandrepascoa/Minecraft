@@ -2,29 +2,32 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <iostream>
 
-Player::Player() :camera(100.0f, 1000.0f, 90.0f), grounded(false), action(PlayerAction::NONE) {
+Player::Player() :camera(0.1f, 10000.0f, 90.0f), grounded(false), action(PlayerAction::NONE), flying(true) {
 }
 
-Player::Player(const glm::vec3 position) : camera(100.0f, 1000.0f, 90.0f), Entity(position), grounded(false)
+Player::Player(const glm::vec3 position) : camera(0.1f, 10000.0f, 90.0f), Entity(position), grounded(false), flying(true)
 {
 }
 
 void Player::update(const ChunkManager& manager, float deltaTime)
 {
 	velocity += acceleration;
-	position += velocity * deltaTime;
+
 	acceleration = { 0,0,0 };
 	if (!grounded && !flying)
 		velocity.y -= 20.f * deltaTime;
 	grounded = false;
+	position.x += velocity.x * deltaTime;
 	if (!flying)
 		collide(manager, { velocity.x * deltaTime,0,0 });
+	position.y += velocity.y * deltaTime;
 	if (!flying)
 		collide(manager, { 0,velocity.y * deltaTime,0 });
+	position.z += velocity.z * deltaTime;
 	if (!flying)
 		collide(manager, { 0,0,velocity.z * deltaTime });
-	
-	if(flying)
+
+	if (flying)
 		velocity.y *= 0.9f;
 	velocity.x *= 0.90f;
 	velocity.z *= 0.90f;

@@ -1,6 +1,4 @@
 #include "ChunkManager.h"
-#include <thread>
-#include <future>
 #include <iostream>
 ChunkManager::ChunkManager() {}
 
@@ -9,24 +7,7 @@ ChunkManager::~ChunkManager()
 	chunks.clear();
 }
 
-void ChunkManager::loadChunks(MasterRenderer* renderer)
-{
-	constexpr int renderDistance = 2;
-	for (int x = -renderDistance; x < renderDistance; x++) {
-		for (int y = -renderDistance; y < renderDistance; y++) {
-			Chunk* newChunk = new Chunk(glm::vec3(x, 0, y));
-			newChunk->generateChunk();
-			chunks[glm::ivec2(x, y)] = newChunk;
-			addChunkToUpdate(glm::ivec2(x, y));
-			std::cout << "Generating Chunk (" << x << "," << y << ")" << std::endl;
-		}
-	}
 
-}
-
-void ChunkManager::createChunk(MasterRenderer* renderer, const glm::vec2& position)
-{
-}
 
 Chunk* ChunkManager::getChunk(const glm::vec2& position) const
 {
@@ -58,6 +39,11 @@ std::deque<glm::ivec2>& ChunkManager::getChunksToUpdate()
 	return chunksToUpdate;
 }
 
+void ChunkManager::addChunk(const glm::ivec2& position, Chunk* chunk)
+{
+	chunks[position] = chunk;
+}
+
 struct comp
 {
 	comp(const glm::ivec2& input) : _input(input) {}
@@ -81,3 +67,7 @@ void ChunkManager::addChunkToUpdateFromBlock(const glm::vec3& position)
 			glm::floor(position.z / 16.0f));
 	addChunkToUpdate(selectedBlockChunkPosition);
 }
+
+std::unordered_map<glm::ivec2, Chunk*, KeyFuncs, KeyFuncs> ChunkManager::getChunks()
+{
+	return chunks;}

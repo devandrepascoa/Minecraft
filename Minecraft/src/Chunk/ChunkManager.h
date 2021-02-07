@@ -5,8 +5,6 @@
 #include "../Renderers/MasterRenderer.h"
 #include <glm/vec2.hpp>
 #include <queue>
-#include <set>
-#include <functional>
 
 
 struct KeyFuncs
@@ -22,7 +20,6 @@ struct KeyFuncs
 	}
 };
 
-
 class ChunkManager
 {
 private:
@@ -31,12 +28,12 @@ private:
 public:
 	ChunkManager();
 	~ChunkManager();
-	void loadChunks(MasterRenderer* renderer);
-	void createChunk(MasterRenderer* renderer, const glm::vec2& position);
 	Chunk* getChunk(const glm::vec2& position) const;
 	Block* getBlock(const glm::vec3& position) const;
 	std::deque<glm::ivec2>& getChunksToUpdate();
+	void addChunk(const glm::ivec2& position, Chunk* chunk);
 	void addChunkToUpdate(const glm::vec2& position);
 	void addChunkToUpdateFromBlock(const glm::vec3& position);
+	std::unordered_map<glm::ivec2, Chunk*, KeyFuncs, KeyFuncs> getChunks();
 };
 

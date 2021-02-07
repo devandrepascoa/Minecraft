@@ -18,12 +18,15 @@ private:
 	Player player;
 	ChunkManager chunkManager;
 	Block* focusBlock;
+	std::thread* chunkUpdateThread;
 	bool initializeOpenglWindow(const char* title);
 	void processKeyboardInput();
+	void chunkUpdateTask();
 public:
 	Application();
 	~Application();
 
+	std::mutex threadLock;
 	void run();
 	static Application& getInstance();
 	static void onWindowResize(GLFWwindow* window, int width, int height);

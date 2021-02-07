@@ -7,48 +7,53 @@
 
 enum class FaceType { FRONT, BACK, LEFT, RIGHT, TOP, BOTTOM };
 
-enum class BlockType { AIR, DIRT, STONE,GRASS };
+enum class BlockType { AIR, DIRT, STONE, GRASS };
 
 static std::array<float, 12> frontFace = {
 
-	-0.5f, -0.5f, -0.5f,
-	0.5f, -0.5f, -0.5f,
-	0.5f,  0.5f, -0.5f,
-	-0.5f,  0.5f, -0.5f,
+	0.5f, 0.5f, 0.5f,
+	-0.5f, 0.5f, 0.5f,
+	-0.5f,  -0.5f, 0.5f,
+	0.5f,  -0.5f, 0.5f,
 };
+
 static std::array<float, 12> backFace = {
-	-0.5f, -0.5f,  0.5f,
-	0.5f, -0.5f,  0.5f,
-	0.5f,  0.5f,  0.5f,
-	-0.5f,  0.5f,  0.5f
+	-0.5f, 0.5f,  -0.5f,
+	0.5f, 0.5f,  -0.5f,
+	0.5f,  -0.5f,  -0.5f,
+	-0.5f,  -0.5f,  -0.5f
 };
+
 static std::array<float, 12> leftFace = {
 	-0.5f,  0.5f,  0.5f,
 	-0.5f,  0.5f, -0.5f,
 	-0.5f, -0.5f, -0.5f,
 	-0.5f, -0.5f,  0.5f,
 };
+
 static std::array<float, 12> rightFace = {
-	0.5f,  0.5f,  0.5f,
-	0.5f,  0.5f, -0.5f,
-	0.5f, -0.5f, -0.5f,
-	0.5f, -0.5f,  0.5f,
+	0.5f,  0.5f,  -0.5f,
+	0.5f,  0.5f, 0.5f,
+	0.5f, -0.5f, 0.5f,
+	0.5f, -0.5f,  -0.5f,
 };
+
 static std::array<float, 12> bottomFace = {
 	-0.5f, -0.5f, -0.5f,
 	0.5f, -0.5f, -0.5f,
 	0.5f, -0.5f,  0.5f,
 	-0.5f, -0.5f,  0.5f
 };
+
 static std::array<float, 12> topFace = {
-	-0.5f,  0.5f, -0.5f,
 	0.5f,  0.5f, -0.5f,
-	0.5f,  0.5f,  0.5f,
+	-0.5f,  0.5f, -0.5f,
 	-0.5f,  0.5f,  0.5f,
+	0.5f,  0.5f,  0.5f,
 };
 
 static std::array<float, 8> getAtlasTexCoords(int x, int y, int w = 16, int h = 16) {
-	float xPos =  ((float)x) / w;
+	float xPos = ((float)x) / w;
 	float yPos = ((float)y) / h;
 
 	return {
@@ -158,6 +163,7 @@ const static std::array<float, 12>& getFaceVertices(FaceType faceType) {
 	case FaceType::BOTTOM: return bottomFace;
 	}
 	ASSERT(false);
+	return {};
 }
 
 const static std::array<float, 8>& getFaceTexCoords(FaceType faceType, BlockType type) {
@@ -167,6 +173,7 @@ const static std::array<float, 8>& getFaceTexCoords(FaceType faceType, BlockType
 	case BlockType::STONE: return stoneTexCoords[faceType];
 	}
 	ASSERT(false);
+	return {};
 }
 
 
@@ -178,7 +185,7 @@ private:
 	bool focus;
 public:
 	Block();
-	Block(glm::vec3 position,BlockType type);
+	Block(glm::vec3 position, BlockType type);
 	BlockType getType() const;
 	bool getFocus() const;
 	void setFocus(bool focus);

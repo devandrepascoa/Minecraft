@@ -5,13 +5,13 @@
 #include <glm/vec4.hpp>
 #include "ChunkManager.h"
 
-Chunk::Chunk() {}
+Chunk::Chunk() :buffered(false), meshed(false) {}
 
-Chunk::Chunk(glm::vec3 position) :Entity(position)
+Chunk::Chunk(glm::vec3 position) : Entity(position), buffered(false), meshed(false)
 {
 }
 
-void addFaceToMesh(Mesh& mesh, glm::vec3 position, FaceType faceType, Block* block) {
+void Chunk::addFaceToMesh(const glm::vec3& position, FaceType faceType, Block* block) {
 	const std::array<float, 12>& faceVertices = getFaceVertices(faceType);
 	const std::array<float, 8>& texCoords = getFaceTexCoords(faceType, block->getType());
 
@@ -32,7 +32,7 @@ void addFaceToMesh(Mesh& mesh, glm::vec3 position, FaceType faceType, Block* blo
 		light = 0.6f;
 		break;
 	}
-	if (block->getFocus()) 	
+	if (block->getFocus())
 		light *= 2.0f;
 
 	std::vector<float>& vertices = mesh.getVertices();
@@ -97,34 +97,31 @@ void Chunk::generateMesh(const ChunkManager& manager)
 
 				Block* block = getBlock(manager, glm::vec3(i, j + 1, k));
 				if (block != nullptr && block->getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::TOP, b);
+					addFaceToMesh(glm::vec3(i, j, k), FaceType::TOP, b);
 
 				block = getBlock(manager, glm::vec3(i, j - 1, k));
 				if (block != nullptr && block->getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::BOTTOM, b);
+					addFaceToMesh(glm::vec3(i, j, k), FaceType::BOTTOM, b);
 
 				block = getBlock(manager, glm::vec3(i + 1, j, k));
 				if (block != nullptr && block->getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::RIGHT, b);
+					addFaceToMesh(glm::vec3(i, j, k), FaceType::RIGHT, b);
 
 				block = getBlock(manager, glm::vec3(i - 1, j, k));
 				if (block != nullptr && block->getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::LEFT, b);
+					addFaceToMesh(glm::vec3(i, j, k), FaceType::LEFT, b);
 
 				block = getBlock(manager, glm::vec3(i, j, k + 1));
 				if (block != nullptr && block->getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::BACK, b);
+					addFaceToMesh(glm::vec3(i, j, k), FaceType::FRONT, b);
 
 				block = getBlock(manager, glm::vec3(i, j, k - 1));
 				if (block != nullptr && block->getType() == BlockType::AIR)
-					addFaceToMesh(mesh, glm::vec3(i, j, k), FaceType::FRONT, b);
+					addFaceToMesh(glm::vec3(i, j, k), FaceType::BACK, b);
 			}
 		}
 	}
 
-	getMesh().updateBuffers();
-	getMesh().clearIndices();
-	getMesh().clearVertices();
 }
 
 Block(*Chunk::getBlocks())[16][256][16]
@@ -164,6 +161,25 @@ glm::vec3 Chunk::toChunkPosition(const glm::vec3& position)
 	return glm::vec3();
 }
 
+bool Chunk::isBuffered()
+{
+	return buffered;
+}
+
+bool Chunk::hasMesh()
+{
+	return meshed;
+}
+
+void Chunk::setMesh(bool meshed)
+{
+	this->meshed = meshed;
+}
+
+void Chunk::setBuffered(bool buffered)
+{
+	this->buffered = buffered;
+}
 
 Mesh& Chunk::getMesh()
 {

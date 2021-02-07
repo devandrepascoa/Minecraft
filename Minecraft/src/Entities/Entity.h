@@ -16,8 +16,8 @@ public:
 	virtual void setRotation(const glm::vec3& rotation);
 	virtual void setVelocity(const glm::vec3& velocity);
 	virtual void setAcceleration(const glm::vec3& acceleration);
-	glm::vec3 getPosition() const;
-	glm::vec3 getRotation() const;
-	glm::vec3 getVelocity() const;
-	glm::vec3 getAcceleration() const;
+	const glm::vec3& getPosition() const;
+	const glm::vec3& getRotation() const;
+	const glm::vec3& getVelocity() const;
+	const glm::vec3& getAcceleration() const;
 };

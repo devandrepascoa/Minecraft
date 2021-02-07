@@ -26,20 +26,20 @@ void Entity::setAcceleration(const glm::vec3& acceleration)
 }
 
 
-glm::vec3 Entity::getPosition() const
+const glm::vec3& Entity::getPosition() const
 {
 	return position;
 }
-glm::vec3 Entity::getRotation() const
+const glm::vec3& Entity::getRotation() const
 {
 	return rotation;
 }
-glm::vec3 Entity::getVelocity() const
+const glm::vec3& Entity::getVelocity() const
 {
 	return velocity;
 }
 
-glm::vec3 Entity::getAcceleration() const
+const glm::vec3& Entity::getAcceleration() const
 {
 	return acceleration;
 }

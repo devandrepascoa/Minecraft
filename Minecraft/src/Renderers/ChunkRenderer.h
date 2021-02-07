@@ -11,6 +11,6 @@ private:
 	Texture textureAtlas;
 public:
 	ChunkRenderer();
-	void render(const Camera& camera, Chunk& chunk);
+	void render(const Camera& camera, Chunk* chunk);
 };
 

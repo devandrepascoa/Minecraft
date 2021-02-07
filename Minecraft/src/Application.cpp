@@ -5,7 +5,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "RayCaster.h"
 #include <glm/gtx/string_cast.hpp>
-Application::Application() :running(true), windowWidth(1920), windowHeight(1080), lastFrameTime(0.0f), player(glm::vec3(10, 200.0f, 10)), lastFrame(0), focusBlock(nullptr)
+#include <thread>
+#include <algorithm>
+Application::Application() :running(true), windowWidth(1920), windowHeight(1080), lastFrameTime(0.0f),
+player(glm::vec3(10, 200.0f, 10)), lastFrame(0), focusBlock(nullptr)
 {
 	if (!initializeOpenglWindow("Minecraft")) {
 		running = false;
@@ -13,9 +16,8 @@ Application::Application() :running(true), windowWidth(1920), windowHeight(1080)
 	}
 	std::cout << "Opengl Version: " << glGetString(GL_VERSION) << std::endl;
 	renderer = new MasterRenderer();
-
-	chunkManager.loadChunks(renderer);
-
+	player.getCamera().updateProjectionMatrix(windowWidth, windowHeight);
+	chunkUpdateThread = new std::thread(&Application::chunkUpdateTask, this);
 }
 
 void Application::onWindowResize(GLFWwindow* window, int width, int height)
@@ -117,6 +119,61 @@ Application::~Application()
 	glfwTerminate();
 }
 
+
+void Application::chunkUpdateTask()
+{
+	while (running) {
+		constexpr int renderDistance = 12;
+		const glm::vec3& cameraPos = player.getCamera().getPosition();
+
+		glm::ivec2 cameraChunkPosition(glm::floor(cameraPos.x / 16.0f), glm::floor(cameraPos.z / 16.0f));
+		for (auto& it : chunkManager.getChunks()) {
+			if (abs(it.first.x - cameraChunkPosition.x) > renderDistance || abs(it.first.y - cameraChunkPosition.y) > renderDistance) {
+				std::lock_guard<std::mutex> lock(threadLock);
+				chunkManager.getChunks().erase(it.first);
+				renderer->deleteChunk(it.second);
+			}
+		}
+
+		for (int i = 0; i < renderDistance; i++) {
+			int minX = cameraChunkPosition.x - i;
+			int minY = cameraChunkPosition.y - i;
+			int maxX = cameraChunkPosition.x + i;
+			int maxY = cameraChunkPosition.y + i;
+			for (int x = minX; x <= maxX; x++) {
+				for (int y = minY; y <= maxY; y++) {
+					if ((x == minX || x == maxX) || (y == minY || y == maxY)) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(1));
+						std::lock_guard<std::mutex> lock(threadLock);
+						Chunk* chunk = chunkManager.getChunk(glm::ivec2(x, y));
+						if (chunk == nullptr || !chunk->hasMesh()) {
+							if (chunk == nullptr) {
+								chunk = new Chunk(glm::vec3(x, 0, y));
+								chunk->generateChunk();
+								chunkManager.addChunk(glm::ivec2(x, y), chunk);
+							}
+							for (int r = x - 1; r <= x + 1; r++) {
+								for (int g = y - 1; g <= y + 1; g++) {
+									if (chunkManager.getChunk(glm::ivec2(r, g)) == nullptr && !(r == x && g == y)) {
+										Chunk* chunk = new Chunk(glm::vec3(r, 0, g));
+										chunk->generateChunk();
+										chunkManager.addChunk(glm::ivec2(r, g), chunk);
+									}
+								}
+							}
+							chunk->generateMesh(chunkManager);
+							chunk->setMesh(true);
+							renderer->addChunk(chunk);
+							std::cout << "Generating Chunk (" << x << "," << y << ")" << std::endl;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
 void Application::run()
 {
 	RayCaster caster(player.getCamera());
@@ -125,16 +182,11 @@ void Application::run()
 		float currentFrame = glfwGetTime();
 		float deltaTime = currentFrame - lastFrameTime;
 		lastFrameTime = currentFrame;
-		//while (glfwGetTime() < lastFrame + 1.0 / 60) {}
-		//lastFrame += 1.0 / 60;
-
-		std::cout << "Player pos:" << glm::to_string(player.getPosition()) << std::endl;
+		while (glfwGetTime() < lastFrame + 1.0 / 60) {}
+		lastFrame += 1.0 / 60;
 
 		renderer->clear();
 		renderer->render(player.getCamera());
-
-		glfwSwapBuffers(window);
-		glfwPollEvents();
 
 		processKeyboardInput();
 		player.update(chunkManager, deltaTime);
@@ -173,19 +225,21 @@ void Application::run()
 				focusBlock = nullptr;
 			}
 		}
-
 		if (!chunkManager.getChunksToUpdate().empty()) {
+			std::lock_guard<std::mutex> lock(threadLock);
 			auto chunkPosition = chunkManager.getChunksToUpdate().front();
 			chunkManager.getChunksToUpdate().pop_front();
 			Chunk* newChunk = chunkManager.getChunk(chunkPosition);
 			if (newChunk != nullptr) {
 				newChunk->generateMesh(chunkManager);
-				newChunk->getMesh().updateBuffers();
-				renderer->addChunk(*newChunk);
+				newChunk->setBuffered(false);
+				renderer->addChunk(newChunk);
 				std::cout << "Update Mesh at Chunk (" << chunkPosition.x << "," << chunkPosition.y << ")" << std::endl;
 			}
 		}
 
+		glfwSwapBuffers(window);
+		glfwPollEvents();
 	}
 }
 
@@ -202,7 +256,7 @@ void Application::processKeyboardInput()
 		running = false;
 	float accelFactor = 0.8f;
 	if (player.isFlying())
-		accelFactor = 5.0f;
+		accelFactor = 2.0f;
 	glm::vec3 acceleration = player.getAcceleration();
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -237,3 +291,4 @@ void Application::processKeyboardInput()
 
 	player.setAcceleration(acceleration);
 }
+
