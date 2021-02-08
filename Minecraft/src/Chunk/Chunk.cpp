@@ -61,11 +61,9 @@ void Chunk::generateChunk()
 		for (size_t k = 0; k < 16; k++) {
 			int x = i + position.x * 16;
 			int y = k + position.z * 16;
-			double val = glm::simplex(glm::vec2(x / 128.f, y / 128.f));
-			double val2 = glm::simplex(glm::vec2(x / 32.f, y / 32.f));
-			double val3 = glm::simplex(glm::vec2(x / 16.f, y / 16.f));
-			val *= val2;
-			val *= val3;
+			double val = glm::simplex(glm::vec2(x / 128.f, y / 128.f)) *
+				glm::simplex(glm::vec2(x / 64.f, y / 64.f)) *
+				glm::simplex(glm::vec2(x / 64.f, y / 64.f));
 
 			val = (val + 1) / 2;
 			val *= 64;
@@ -75,7 +73,7 @@ void Chunk::generateChunk()
 				if (j > val)
 					blocks[i][j][k] = Block(toWorldPosition(glm::vec3(i, j, k)), BlockType::AIR);
 				else {
-					if (j > 80)
+										if (j > 80)
 						blocks[i][j][k] = Block(toWorldPosition(glm::vec3(i, j, k)), BlockType::DIRT);
 					else
 						blocks[i][j][k] = Block(toWorldPosition(glm::vec3(i, j, k)), BlockType::STONE);

@@ -36,7 +36,6 @@ bool Mesh::buffersExist()
 
 void Mesh::updateBuffers()
 {
-	if (indices.empty() || vertices.empty())return;
 	if (!buffersExist())
 		createBuffers();
 

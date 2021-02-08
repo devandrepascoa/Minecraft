@@ -8,6 +8,7 @@ ChunkRenderer::ChunkRenderer()
 
 void ChunkRenderer::render(const Camera& camera, Chunk* chunk)
 {
+
 	GLCall(glEnable(GL_CULL_FACE));
 	GLCall(glCullFace(GL_BACK));
 	GLCall(glEnable(GL_DEPTH_TEST));

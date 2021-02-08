@@ -8,7 +8,7 @@
 #include <thread>
 #include <algorithm>
 Application::Application() :running(true), windowWidth(1920), windowHeight(1080), lastFrameTime(0.0f),
-player(glm::vec3(10, 200.0f, 10)), lastFrame(0), focusBlock(nullptr)
+player(glm::vec3(10, 140.0f, 10)), lastFrame(0), focusBlock(nullptr)
 {
 	if (!initializeOpenglWindow("Minecraft")) {
 		running = false;
@@ -140,6 +140,7 @@ void Application::chunkUpdateTask()
 			int minY = cameraChunkPosition.y - i;
 			int maxX = cameraChunkPosition.x + i;
 			int maxY = cameraChunkPosition.y + i;
+
 			for (int x = minX; x <= maxX; x++) {
 				for (int y = minY; y <= maxY; y++) {
 					if ((x == minX || x == maxX) || (y == minY || y == maxY)) {
@@ -161,6 +162,7 @@ void Application::chunkUpdateTask()
 									}
 								}
 							}
+
 							chunk->generateMesh(chunkManager);
 							chunk->setMesh(true);
 							renderer->addChunk(chunk);
@@ -182,8 +184,8 @@ void Application::run()
 		float currentFrame = glfwGetTime();
 		float deltaTime = currentFrame - lastFrameTime;
 		lastFrameTime = currentFrame;
-		while (glfwGetTime() < lastFrame + 1.0 / 60) {}
-		lastFrame += 1.0 / 60;
+		//while (glfwGetTime() < lastFrame + 1.0 / 60) {}
+		//lastFrame += 1.0 / 60;
 
 		renderer->clear();
 		renderer->render(player.getCamera());
@@ -225,7 +227,8 @@ void Application::run()
 				focusBlock = nullptr;
 			}
 		}
-		if (!chunkManager.getChunksToUpdate().empty()) {
+
+		while (!chunkManager.getChunksToUpdate().empty()) {
 			std::lock_guard<std::mutex> lock(threadLock);
 			auto chunkPosition = chunkManager.getChunksToUpdate().front();
 			chunkManager.getChunksToUpdate().pop_front();

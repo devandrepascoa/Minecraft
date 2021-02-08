@@ -2,10 +2,10 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <iostream>
 
-Player::Player() :camera(0.1f, 10000.0f, 90.0f), grounded(false), action(PlayerAction::NONE), flying(true) {
+Player::Player() :camera(0.1f, 10000.0f, 90.0f), grounded(false), action(PlayerAction::NONE), flying(false) {
 }
 
-Player::Player(const glm::vec3 position) : camera(0.1f, 10000.0f, 90.0f), Entity(position), grounded(false), flying(true)
+Player::Player(const glm::vec3 position) : camera(0.1f, 10000.0f, 90.0f), Entity(position), grounded(false), flying(false)
 {
 }
 
